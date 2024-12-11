@@ -1,23 +1,29 @@
-name: Go test CI
-
+name: Deployment Manager Actions
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
 
   go-test:
-
-    runs-on: ubuntu-latest
-
+    name: GoTest
+    strategy:
+      matrix:
+        go-version: ['1.21.x', '1.22.x']
+        os: ['ubuntu-20.04', 'ubuntu-22.04']
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-go@v5
       with:
-        go-version: '1.22.2'
-
+        go-version: ${{ matrix.go-version }}
     - name: Test the commit
       run: make test
 
@@ -38,7 +44,7 @@ jobs:
         # cache in setup-go, on disabling the cache we are no more seeing
         # such error. Cache is to be enabled once the fix is available for
         # this issue
-        go-version: '1.22.2'
+        go-version: ${{ matrix.go-version }}
         cache: false
 
     - name: golangci-lint
